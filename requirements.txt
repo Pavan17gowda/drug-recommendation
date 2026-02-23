@@ -1,0 +1,9 @@
+gunicorn
+flask
+flask_mysqldb
+MySQL
+pymysql
+bcrypt
+psycopg2-binary
+dotenv
+flask_sqlalchemy

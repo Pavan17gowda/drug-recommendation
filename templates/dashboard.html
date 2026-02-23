@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DrugGenius</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff3838;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.green { background: linear-gradient(135deg, #56ab2f, #a8e063); }
+        .stat-icon.orange { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.purple { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+        .stat-info h3 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .history-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .history-date {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .history-symptoms {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .history-disease {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .history-meds {
+            color: #27ae60;
+            font-size: 13px;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #56ab2f, #a8e063);
+        }
+
+        .action-btn.tertiary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .health-tips {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .health-tips h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .health-tips ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .health-tips li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .health-tips li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> DrugGenius Dashboard</h1>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div style="font-weight: 600; color: #2c3e50;" id="userName">User</div>
+                    <div style="font-size: 12px; color: #7f8c8d;" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalRecommendations">0</h3>
+                    <p>Total Recommendations</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="symptomsTracked">0</h3>
+                    <p>Symptoms Tracked</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="fas fa-disease"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="diseasesIdentified">0</h3>
+                    <p>Diseases Identified</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="lastVisit">Never</h3>
+                    <p>Last Visit</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Recent Recommendations</h2>
+                <div id="historyContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No recommendations yet. Start by checking your symptoms!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    <div class="quick-actions">
+                        <a href="/" class="action-btn">
+                            <i class="fas fa-search"></i>
+                            New Symptom Check
+                        </a>
+                        <a href="/history" class="action-btn secondary">
+                            <i class="fas fa-history"></i>
+                            View Full History
+                        </a>
+                        <button class="action-btn secondary" onclick="window.print()">
+                            <i class="fas fa-download"></i>
+                            Download Report
+                        </button>
+                        <button class="action-btn tertiary" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i>
+                            Clear History
+                        </button>
+                    </div>
+
+                    <div class="health-tips">
+                        <h3><i class="fas fa-lightbulb"></i> Health Tips</h3>
+                        <ul>
+                            <li>Stay hydrated - drink 8 glasses of water daily</li>
+                            <li>Get 7-8 hours of sleep each night</li>
+                            <li>Exercise for at least 30 minutes daily</li>
+                            <li>Eat a balanced diet with fruits and vegetables</li>
+                            <li>Consult a doctor for persistent symptoms</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allHistory = [];
+
+        // Load user data
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/get-recommendations');
+                const data = await response.json();
+
+                if (response.ok) {
+                    allHistory = data.history || [];
+                    updateStats(allHistory);
+                    displayHistory(allHistory);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateStats(history) {
+            document.getElementById('totalRecommendations').textContent = history.length;
+            
+            let totalSymptoms = 0;
+            let diseasesSet = new Set();
+            
+            history.forEach(item => {
+                totalSymptoms += item.symptoms?.length || 0;
+                item.diseases?.forEach(disease => diseasesSet.add(disease));
+            });
+
+            document.getElementById('symptomsTracked').textContent = totalSymptoms;
+            document.getElementById('diseasesIdentified').textContent = diseasesSet.size;
+            
+            if (history.length > 0) {
+                const lastDate = new Date(history[history.length - 1].date);
+                document.getElementById('lastVisit').textContent = formatDate(lastDate);
+            }
+        }
+
+        function displayHistory(history) {
+            const container = document.getElementById('historyContainer');
+            
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No recommendations yet. Start by checking your symptoms!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.slice().reverse().map((item, index) => {
+                const actualIndex = history.length - 1 - index;
+                const symptomsId = `dash-symptoms-${actualIndex}`;
+                const medsId = `dash-meds-${actualIndex}`;
+                
+                return `
+                <div class="history-item">
+                    <div class="history-date">${formatDateTime(item.date)}</div>
+                    <div class="history-symptoms">
+                        <strong>Symptoms:</strong> 
+                        <span id="${symptomsId}">
+                            ${(item.symptoms || []).slice(0, 3).join(', ')}
+                        </span>
+                        ${item.symptoms?.length > 3 ? `
+                            <span style="color: #667eea; font-weight: 600; cursor: pointer;" onclick="expandDashSymptoms('${symptomsId}', ${actualIndex})">
+                                +${item.symptoms.length - 3} more
+                            </span>
+                        ` : ''}
+                    </div>
+                    <div class="history-disease">
+                        <strong>Identified:</strong> ${(item.diseases || []).join(', ') || 'N/A'}
+                    </div>
+                    <div class="history-meds">
+                        <strong>Medications:</strong> 
+                        <span id="${medsId}">
+                            ${(item.medications || []).slice(0, 3).join(', ')}
+                        </span>
+                        ${item.medications?.length > 3 ? `
+                            <span style="color: #667eea; font-weight: 600; cursor: pointer;" onclick="expandDashMeds('${medsId}', ${actualIndex})">
+                                +${item.medications.length - 3} more
+                            </span>
+                        ` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function expandDashSymptoms(elementId, index) {
+            const item = allHistory[index];
+            const element = document.getElementById(elementId);
+            const parent = element.parentElement;
+            
+            // Replace with all symptoms
+            element.textContent = (item.symptoms || []).join(', ');
+            
+            // Remove the "+X more" span
+            const moreSpan = parent.querySelector('span[onclick*="expandDashSymptoms"]');
+            if (moreSpan) {
+                moreSpan.remove();
+            }
+        }
+
+        function expandDashMeds(elementId, index) {
+            const item = allHistory[index];
+            const element = document.getElementById(elementId);
+            const parent = element.parentElement;
+            
+            // Replace with all medications
+            element.textContent = (item.medications || []).join(', ');
+            
+            // Remove the "+X more" span
+            const moreSpan = parent.querySelector('span[onclick*="expandDashMeds"]');
+            if (moreSpan) {
+                moreSpan.remove();
+            }
+        }
+
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days === 0) return 'Today';
+            if (days === 1) return 'Yesterday';
+            if (days < 7) return `${days} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/';
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear your history? This cannot be undone.')) {
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No recommendations yet. Start by checking your symptoms!</p>
+                    </div>
+                `;
+                document.getElementById('totalRecommendations').textContent = '0';
+                document.getElementById('symptomsTracked').textContent = '0';
+                document.getElementById('diseasesIdentified').textContent = '0';
+                document.getElementById('lastVisit').textContent = 'Never';
+            }
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+    </script>
+</body>
+</html>
