@@ -1,16 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
-from flask_mysqldb import MySQL
 import subprocess
 import os
-import pymysql
-import psycopg2
 import bcrypt
 from dotenv import load_dotenv
-from flask_sqlalchemy import SQLAlchemy
 import json
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = '717730305d8ed3cdc3f37eedaf000abe29f377cdc7800607'  # For session or additional security
+app.secret_key = '717730305d8ed3cdc3f37eedaf000abe29f377cdc7800607'
 
 # File paths for data persistence
 USERS_FILE = 'data/users.json'
@@ -51,22 +48,8 @@ users_db = load_users()
 # Store user recommendations history
 recommendations_history = load_recommendations()
 
-# Database connection (commented out for testing)
-# db = pymysql.connect(
-#     host="localhost",
-#     user="root",
-#     password="root",
-#     database="druggenius"
-# )
-
-# db = psycopg2.connect(
-#     host=os.getenv("DB_HOST"),
-#     database=os.getenv("DB_NAME"),
-#     user=os.getenv("DB_USER"),
-#     password=os.getenv("DB_PASSWORD"),
-#     port=os.getenv("DB_PORT")
-# )
-# cursor = db.cursor()
+# Database connection (commented out for Vercel deployment)
+# For production, use a cloud database like MongoDB Atlas, PostgreSQL on Railway, etc.
 
 @app.route('/')
 def index():
@@ -177,3 +160,8 @@ def get_recommendations():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+# Vercel serverless function handler
+def handler(request):
+    return app(request.environ, lambda *args: None)
+

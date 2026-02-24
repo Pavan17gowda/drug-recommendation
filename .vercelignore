@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.env
+venv
+.git
+.gitignore
+README.md
+.vscode
+.idea
+*.log
+data/users.json
+data/recommendations.json
