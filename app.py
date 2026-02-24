@@ -6,18 +6,33 @@ from dotenv import load_dotenv
 import json
 from datetime import datetime
 
-app = Flask(__name__)
-app.secret_key = '717730305d8ed3cdc3f37eedaf000abe29f377cdc7800607'
+# Load environment variables
+load_dotenv()
 
-# File paths for data persistence
+# Import database module
+try:
+    from database import db as mongodb
+    USE_MONGODB = True
+    print("✅ Using MongoDB for data storage")
+except Exception as e:
+    print(f"⚠️ MongoDB not available, using JSON files: {e}")
+    USE_MONGODB = False
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', '717730305d8ed3cdc3f37eedaf000abe29f377cdc7800607')
+
+# File paths for data persistence (fallback)
 USERS_FILE = 'data/users.json'
 RECOMMENDATIONS_FILE = 'data/recommendations.json'
 
 # Ensure data directory exists
 os.makedirs('data', exist_ok=True)
 
-# Load data from files
+# Load data from files or MongoDB
 def load_users():
+    if USE_MONGODB:
+        return mongodb.get_all_users()
+    
     if os.path.exists(USERS_FILE):
         try:
             with open(USERS_FILE, 'r') as f:
@@ -27,10 +42,18 @@ def load_users():
     return {}
 
 def save_users(users):
+    if USE_MONGODB:
+        # Users are saved individually in MongoDB
+        return
+    
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, indent=2)
 
 def load_recommendations():
+    if USE_MONGODB:
+        # Recommendations are loaded per user in MongoDB
+        return {}
+    
     if os.path.exists(RECOMMENDATIONS_FILE):
         try:
             with open(RECOMMENDATIONS_FILE, 'r') as f:
@@ -40,6 +63,10 @@ def load_recommendations():
     return {}
 
 def save_recommendations(recommendations):
+    if USE_MONGODB:
+        # Recommendations are saved individually in MongoDB
+        return
+    
     with open(RECOMMENDATIONS_FILE, 'w') as f:
         json.dump(recommendations, f, indent=2)
 
@@ -76,21 +103,29 @@ def register():
         return jsonify({"message": "All fields are required"}), 400
     
     # Check if user already exists
-    if email in users_db:
-        return jsonify({"message": "Email already registered"}), 400
+    if USE_MONGODB:
+        existing_user = mongodb.get_user(email)
+        if existing_user:
+            return jsonify({"message": "Email already registered"}), 400
+    else:
+        if email in users_db:
+            return jsonify({"message": "Email already registered"}), 400
     
     # Hash the password with fewer rounds for faster processing (4 rounds = 16 iterations)
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=4)).decode('utf-8')
     
-    # Store user in memory
-    users_db[email] = {
-        'username': username,
-        'email': email,
-        'password': hashed_password
-    }
-    
-    # Save to file
-    save_users(users_db)
+    # Store user
+    if USE_MONGODB:
+        success = mongodb.create_user(email, username, hashed_password)
+        if not success:
+            return jsonify({"message": "Registration failed"}), 500
+    else:
+        users_db[email] = {
+            'username': username,
+            'email': email,
+            'password': hashed_password
+        }
+        save_users(users_db)
     
     return jsonify({"message": "User registered successfully"}), 200
 
@@ -107,16 +142,24 @@ def login():
         return jsonify({"message": "Email and password are required"}), 400
     
     # Check if user exists
-    if email not in users_db:
-        return jsonify({"message": "Invalid email or password"}), 401
+    if USE_MONGODB:
+        user = mongodb.get_user(email)
+        if not user:
+            return jsonify({"message": "Invalid email or password"}), 401
+        stored_password = user['password']
+        username = user['username']
+    else:
+        if email not in users_db:
+            return jsonify({"message": "Invalid email or password"}), 401
+        stored_password = users_db[email]['password']
+        username = users_db[email]['username']
     
     # Verify password
-    stored_password = users_db[email]['password']
     if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
         session['user'] = email
         return jsonify({
             "message": "Login successful", 
-            "username": users_db[email]['username'],
+            "username": username,
             "email": email
         }), 200
     else:
@@ -130,21 +173,25 @@ def save_recommendation():
     if not email:
         return jsonify({"message": "Not authenticated"}), 401
     
-    if email not in recommendations_history:
-        recommendations_history[email] = []
-    
-    recommendations_history[email].append({
-        'date': data.get('date'),
-        'symptoms': data.get('symptoms'),
-        'diseases': data.get('diseases'),
-        'medications': data.get('medications'),
-        'patientInfo': data.get('patientInfo')
-    })
-    
-    # Save to file
-    save_recommendations(recommendations_history)
-    
-    return jsonify({"message": "Recommendation saved"}), 200
+    if USE_MONGODB:
+        rec = mongodb.create_recommendation(email, data)
+        if rec:
+            return jsonify({"message": "Recommendation saved"}), 200
+        return jsonify({"message": "Failed to save recommendation"}), 500
+    else:
+        if email not in recommendations_history:
+            recommendations_history[email] = []
+        
+        recommendations_history[email].append({
+            'date': data.get('date'),
+            'symptoms': data.get('symptoms'),
+            'diseases': data.get('diseases'),
+            'medications': data.get('medications'),
+            'patientInfo': data.get('patientInfo')
+        })
+        
+        save_recommendations(recommendations_history)
+        return jsonify({"message": "Recommendation saved"}), 200
 
 @app.route('/get-recommendations', methods=['GET'])
 def get_recommendations():
@@ -153,7 +200,11 @@ def get_recommendations():
     if not email:
         return jsonify({"message": "Not authenticated"}), 401
     
-    history = recommendations_history.get(email, [])
+    if USE_MONGODB:
+        history = mongodb.get_recommendations(email)
+    else:
+        history = recommendations_history.get(email, [])
+    
     return jsonify({"history": history}), 200
 
 
